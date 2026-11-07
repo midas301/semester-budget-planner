@@ -15,3 +15,6 @@ button { margin-top: 16px; }
 .chip { width: auto; margin-top: 0; border-radius: 20px; background: #fff; }
 .chip.selected { background: #333; color: #fff; }
 #expense-list { padding-left: 18px; }
+
+.alert-box { border: 2px dashed #b00020; border-radius: 12px; padding: 20px; margin-top: 40px; }
+.alert-box h2 { margin-top: 0; color: #b00020; }
