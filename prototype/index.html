@@ -13,7 +13,7 @@
       <p>Make your money last the whole semester.</p>
       <button data-goto="home">Get started</button>
     </section>
-    
+
     <section id="setup" class="screen">
         <h2>Set up your budget</h2>
       
@@ -29,9 +29,32 @@
         <button data-goto="welcome" class="secondary">Back</button>
       </section>
 
+      <section id="add" class="screen">
+        <h2>Add expense</h2>
+      
+        <label for="amount">Amount (₹)</label>
+        <input id="amount" type="number" min="1" placeholder="e.g. 120">
+      
+        <label>Category</label>
+        <div class="chips" id="categories">
+          <button class="chip selected" data-cat="Food">Food</button>
+          <button class="chip" data-cat="Travel">Travel</button>
+          <button class="chip" data-cat="Shopping">Shopping</button>
+          <button class="chip" data-cat="Other">Other</button>
+        </div>
+      
+        <p id="add-error" class="error" hidden>Enter an amount greater than 0.</p>
+      
+        <button id="save-expense">Save expense</button>
+        <button data-goto="home" class="secondary">Cancel</button>
+      </section>
+
     <section id="home" class="screen">
       <h2>Home</h2>
       <button data-goto="welcome">Back</button>
+      <h3>Recent expenses</h3>
+      <ul id="expense-list"></ul>
+      <button data-goto="add">+ Add expense</button>
     </section>
   </main>
   <script src="app.js"></script>
