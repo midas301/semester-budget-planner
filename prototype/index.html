@@ -13,6 +13,21 @@
       <p>Make your money last the whole semester.</p>
       <button data-goto="home">Get started</button>
     </section>
+    
+    <section id="setup" class="screen">
+        <h2>Set up your budget</h2>
+      
+        <label for="total">Total money for the semester (₹)</label>
+        <input id="total" type="number" min="1" placeholder="e.g. 30000">
+      
+        <label for="weeks">Semester length (weeks)</label>
+        <input id="weeks" type="number" min="1" value="20">
+      
+        <p id="setup-error" class="error" hidden>Enter a budget and number of weeks greater than 0.</p>
+      
+        <button id="create-budget">Create my budget</button>
+        <button data-goto="welcome" class="secondary">Back</button>
+      </section>
 
     <section id="home" class="screen">
       <h2>Home</h2>
