@@ -1,86 +1,84 @@
-document.querySelectorAll('[data-goto]').forEach(btn => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-      document.getElementById(btn.dataset.goto).classList.add('active');
-    });
-  });
-
-  const state = { total: 0, weeks: 0, weeklyBudget: 0, spentThisWeek: 0, expenses: [] };
+// app.js: screen navigation, setup screen, home screen.
 
 function showScreen(id) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   document.getElementById(id).classList.add('active');
 }
 
-document.getElementById('create-budget').addEventListener('click', () => {
-  const total = Number(document.getElementById('total').value);
-  const weeks = Number(document.getElementById('weeks').value);
-  const error = document.getElementById('setup-error');
+// ---- Home ----
+function renderHome() {
+  const s = getWeekStatus();
+  if (!s) return;
 
-  if (total <= 0 || weeks <= 0) {
-    error.hidden = false;
-    return;
-  }
-  error.hidden = true;
-
-  state.total = total;
-  state.weeks = weeks;
-  state.weeklyBudget = Math.round(total / weeks);
-
-  // TODO (your task): show state.weeklyBudget on the Home screen
-  showScreen('home');
-});
-
-let selectedCategory = 'Food';
-
-document.querySelectorAll('.chip').forEach(chip => {
-  chip.addEventListener('click', () => {
-    document.querySelectorAll('.chip').forEach(c => c.classList.remove('selected'));
-    chip.classList.add('selected');
-    selectedCategory = chip.dataset.cat;
-  });
-});
-
-function updateHome() {
-  const left = state.weeklyBudget - state.spentThisWeek;
-  document.getElementById('left-this-week').textContent = '₹' + left;
+  document.getElementById('left-this-week').textContent = '₹' + s.left;
+  document.getElementById('week-label').textContent =
+    'Week ' + s.weekNumber + ' of ' + s.totalWeeks + ' · ₹' + s.spent +
+    ' spent of ₹' + s.weeklyBudget;
 
   const list = document.getElementById('expense-list');
   list.innerHTML = '';
-  state.expenses.slice(-5).reverse().forEach(e => {
+  getExpenses().slice(-5).reverse().forEach(e => {
     const li = document.createElement('li');
     li.textContent = e.category + ': ₹' + e.amount;
     list.appendChild(li);
   });
 }
 
-function checkOverspend() {
-    const used = state.spentThisWeek / state.weeklyBudget;
-    if (used < 0.8) return false;
-  
-    const left = state.weeklyBudget - state.spentThisWeek;
-    document.getElementById('alert-message').textContent =
-      'You have used ' + Math.round(used * 100) + '% of this week\u2019s budget. ' +
-      '₹' + left + ' left.';
-    return true;
-  }
-  
-  document.getElementById('alert-ok').addEventListener('click', () => showScreen('home'));
+// ---- Navigation buttons ----
+document.querySelectorAll('[data-goto]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const target = btn.dataset.goto;
+    if (target === 'home') renderHome();
+    showScreen(target);
+  });
+});
 
-document.getElementById('save-expense').addEventListener('click', () => {
-  const amount = Number(document.getElementById('amount').value);
-  const error = document.getElementById('add-error');
+// ---- Setup screen ----
+const totalInput = document.getElementById('total');
+const weeksInput = document.getElementById('weeks');
+const startInput = document.getElementById('start-date');
+const preview = document.getElementById('weekly-preview');
+const setupError = document.getElementById('setup-error');
 
-  if (amount <= 0) {
-    error.hidden = false;
+startInput.value = todayISO();
+
+function updatePreview() {
+  const total = Number(totalInput.value);
+  const weeks = Number(weeksInput.value);
+  preview.textContent = (total > 0 && weeks > 0)
+    ? 'That is about ₹' + Math.round(total / weeks) + ' per week.'
+    : '';
+}
+totalInput.addEventListener('input', updatePreview);
+weeksInput.addEventListener('input', updatePreview);
+
+document.getElementById('create-budget').addEventListener('click', () => {
+  const total = Number(totalInput.value);
+  const weeks = Number(weeksInput.value);
+  const start = startInput.value;
+
+  let message = '';
+  if (!(total > 0)) message = 'Enter a total budget greater than 0.';
+  else if (!start) message = 'Pick the semester start date.';
+  else if (!Number.isInteger(weeks) || weeks < 1 || weeks > 52)
+    message = 'Enter a whole number of weeks between 1 and 52.';
+
+  if (message) {
+    setupError.textContent = message;
+    setupError.hidden = false;
     return;
   }
-  error.hidden = true;
+  setupError.hidden = true;
 
-  state.expenses.push({ amount, category: selectedCategory });
-  state.spentThisWeek += amount;
-  document.getElementById('amount').value = '';
-
-  updateHome();
-  showScreen(checkOverspend() ? 'alert' : 'home');
+  saveBudget(total, start, weeks);
+  renderHome();
+  showScreen('home');
 });
+
+// ---- On app start: returning users go straight to Home ----
+if (getBudget()) {
+  renderHome();
+  showScreen('home');
+} else {
+  showScreen('welcome');
+}

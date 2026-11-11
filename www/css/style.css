@@ -18,3 +18,4 @@ button { margin-top: 16px; }
 
 .alert-box { border: 2px dashed #b00020; border-radius: 12px; padding: 20px; margin-top: 40px; }
 .alert-box h2 { margin-top: 0; color: #b00020; }
+.hint { font-size: 14px; color: #555; margin: 8px 0; }
