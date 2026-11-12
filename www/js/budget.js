@@ -1,66 +1,86 @@
-// budget.js: weekly budget maths. Needs data.js loaded first.
+// Semester date and spending calculations. Needs data.js loaded first.
 
-const WARN_AT = 0.8;   // alert when 80% of the weekly budget is used
+const WARN_AT = 0.8;
 const DAY_MS = 86400000;
 
-function parseISO(iso) {
-  const p = iso.split('-');
-  return new Date(Number(p[0]), Number(p[1]) - 1, Number(p[2]));
+function parseISO(isoDate) {
+  const parts = isoDate.split('-').map(Number);
+  return new Date(parts[0], parts[1] - 1, parts[2]);
 }
 
-function addDays(iso, n) {
-  const d = parseISO(iso);
-  d.setDate(d.getDate() + n);
-  return toISODate(d);
+function addDays(isoDate, days) {
+  const date = parseISO(isoDate);
+  date.setDate(date.getDate() + days);
+  return toISODate(date);
 }
 
 function daysBetween(fromISO, toISO) {
-  return Math.round((parseISO(toISO) - parseISO(fromISO)) / DAY_MS);
+  const from = fromISO.split('-').map(Number);
+  const to = toISO.split('-').map(Number);
+  return Math.round((Date.UTC(to[0], to[1] - 1, to[2]) -
+    Date.UTC(from[0], from[1] - 1, from[2])) / DAY_MS);
 }
 
-function getWeeklyBudget(budget) {
-  return Math.round(budget.total / budget.weeks);
+function getWeeksInRange(startDate, endDate) {
+  return Math.max(1, Math.ceil(daysBetween(startDate, endDate) / 7));
 }
 
-// Which week of the semester is today in? (0 = first week)
-// Clamped, so before the start it returns 0 and after the end the last week.
+function getWeeklyBudget(budget, weekIndex) {
+  const base = Math.floor(budget.total / budget.weeks);
+  const remainder = budget.total - base * budget.weeks;
+  if (typeof weekIndex !== 'number') return Math.round(budget.total / budget.weeks);
+  return base + (weekIndex < remainder ? 1 : 0);
+}
+
 function getWeekIndex(budget, dateISO) {
-  const idx = Math.floor(daysBetween(budget.startDate, dateISO || todayISO()) / 7);
-  return Math.max(0, Math.min(budget.weeks - 1, idx));
+  const targetDate = dateISO || todayISO();
+  const index = Math.floor(daysBetween(budget.startDate, targetDate) / 7);
+  return Math.max(0, Math.min(budget.weeks - 1, index));
 }
 
 function getWeekRange(budget, weekIndex) {
-  const start = addDays(budget.startDate, weekIndex * 7);
-  return { start: start, end: addDays(start, 6) };
+  const index = Math.max(0, Math.min(budget.weeks - 1, weekIndex));
+  const start = addDays(budget.startDate, index * 7);
+  const defaultEnd = addDays(start, 6);
+  return {
+    start: start,
+    end: index === budget.weeks - 1 && budget.endDate
+      ? budget.endDate
+      : budget.endDate && budget.endDate < defaultEnd ? budget.endDate : defaultEnd
+  };
 }
 
-function sumExpenses(list) {
-  return list.reduce((sum, e) => sum + e.amount, 0);
+function getExpensesInRange(startDate, endDate) {
+  return getExpenses().filter(expense =>
+    expense.date >= startDate && expense.date <= endDate
+  );
 }
 
-function getSpentInRange(start, end) {
-  // ISO dates compare correctly as plain text
-  return sumExpenses(getExpenses().filter(e => e.date >= start && e.date <= end));
+function sumExpenses(expenses) {
+  return expenses.reduce((sum, expense) => sum + Number(expense.amount || 0), 0);
 }
 
-// Everything the Home and Alert screens need, in one object.
-// Returns null if the budget has not been set up yet.
-function getWeekStatus() {
+function getSpentInRange(startDate, endDate) {
+  return sumExpenses(getExpensesInRange(startDate, endDate));
+}
+
+function getWeekStatus(dateISO) {
   const budget = getBudget();
   if (!budget) return null;
 
-  const weekIndex = getWeekIndex(budget);
+  const today = dateISO || todayISO();
+  const weekIndex = getWeekIndex(budget, today);
   const range = getWeekRange(budget, weekIndex);
-  const weeklyBudget = getWeeklyBudget(budget);
+  const weeklyBudget = getWeeklyBudget(budget, weekIndex);
   const spent = getSpentInRange(range.start, range.end);
   const left = weeklyBudget - spent;
   const used = weeklyBudget > 0 ? spent / weeklyBudget : 0;
-
   let level = 'ok';
   if (used >= 1) level = 'over';
   else if (used >= WARN_AT) level = 'warning';
 
   return {
+    weekIndex: weekIndex,
     weekNumber: weekIndex + 1,
     totalWeeks: budget.weeks,
     weekStart: range.start,
@@ -69,28 +89,61 @@ function getWeekStatus() {
     spent: spent,
     left: left,
     percentUsed: Math.round(used * 100),
-    level: level
+    level: level,
+    beforeSemester: today < budget.startDate,
+    afterSemester: today > budget.endDate
   };
 }
 
-// For Insights: { Food: 1200, Travel: 300, ... }
-function getCategoryTotals() {
+function getCategorySpent(startDate, endDate, categoryId) {
+  return sumExpenses(getExpensesInRange(startDate, endDate).filter(expense =>
+    expense.categoryId === categoryId
+  ));
+}
+
+function getCategoryTotals(startDate, endDate) {
+  const expenses = startDate && endDate
+    ? getExpensesInRange(startDate, endDate)
+    : getExpenses();
   const totals = {};
-  getExpenses().forEach(e => {
-    totals[e.category] = (totals[e.category] || 0) + e.amount;
+  expenses.forEach(expense => {
+    totals[expense.categoryId] = (totals[expense.categoryId] || 0) +
+      Number(expense.amount || 0);
   });
   return totals;
 }
 
-// For Insights: spending for every week so far, [{ week: 1, spent: 900 }, ...]
 function getWeeklyTotals() {
   const budget = getBudget();
   if (!budget) return [];
   const current = getWeekIndex(budget);
   const rows = [];
-  for (let i = 0; i <= current; i++) {
-    const r = getWeekRange(budget, i);
-    rows.push({ week: i + 1, spent: getSpentInRange(r.start, r.end) });
+  for (let index = 0; index <= current; index += 1) {
+    const range = getWeekRange(budget, index);
+    rows.push({
+      week: index + 1,
+      budget: getWeeklyBudget(budget, index),
+      spent: getSpentInRange(range.start, range.end)
+    });
   }
   return rows;
+}
+
+function getDayTotals(startDate, endDate) {
+  const expenses = getExpensesInRange(startDate, endDate);
+  const totals = {};
+  expenses.forEach(expense => {
+    totals[expense.date] = (totals[expense.date] || 0) +
+      Number(expense.amount || 0);
+  });
+  return totals;
+}
+
+function getSemesterSpent(budget) {
+  return getSpentInRange(budget.startDate, budget.endDate);
+}
+
+function getMonthlyExpenses(year, month) {
+  const prefix = String(year) + '-' + String(month).padStart(2, '0');
+  return getExpenses().filter(expense => expense.date.slice(0, 7) === prefix);
 }
