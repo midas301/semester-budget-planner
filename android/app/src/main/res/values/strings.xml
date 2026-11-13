@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">Semester Budget Planner</string>
-    <string name="title_activity_main">Semester Budget Planner</string>
+    <string name="app_name">pocket</string>
+    <string name="title_activity_main">pocket</string>
     <string name="package_name">com.threemusketeers.budgetplanner</string>
     <string name="custom_url_scheme">com.threemusketeers.budgetplanner</string>
 </resources>

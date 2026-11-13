@@ -2,78 +2,228 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Semester Budget Planner</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#f7f6f2">
+  <title>pocket — your student budget companion</title>
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-  <main class="phone">
-    <section id="welcome" class="screen active">
-      <h1>Semester Budget Planner</h1>
-      <p>Make your money last the whole semester.</p>
-      <button data-goto="home">Get started</button>
-    </section>
+  <div class="app-shell">
+    <header class="app-header">
+      <a class="brand" href="#" data-goto="welcome" aria-label="pocket home">
+        <img src="assets/pocket-logo.png" alt="" class="brand-mark">
+        <span>
+          <strong>pocket</strong>
+          <small>THE STUDENT COMPANION</small>
+        </span>
+      </a>
+      <button class="icon-button" id="help-button" type="button" aria-label="About pocket">?</button>
+    </header>
 
-      <section id="setup" class="screen">
-        <h2>Set up your budget</h2>
-      
-        <label for="total">Total money for the semester (₹)</label>
-        <input id="total" type="number" inputmode="numeric" min="1" placeholder="e.g. 30000">
-      
-        <label for="start-date">Semester start date</label>
-        <input id="start-date" type="date">
-      
-        <label for="weeks">Semester length (weeks)</label>
-        <input id="weeks" type="number" inputmode="numeric" min="1" max="52" value="20">
-      
-        <p id="weekly-preview" class="hint"></p>
-        <p id="setup-error" class="error" hidden></p>
-      
-        <button id="create-budget" type="button">Create my budget</button>
-        <button data-goto="welcome" type="button" class="secondary">Back</button>
-      </section>
-
-      <section id="add" class="screen">
-        <h2>Add expense</h2>
-      
-        <label for="amount">Amount (₹)</label>
-        <input id="amount" type="number" min="1" placeholder="e.g. 120">
-      
-        <label>Category</label>
-        <div class="chips" id="categories">
-          <button class="chip selected" data-cat="Food">Food</button>
-          <button class="chip" data-cat="Travel">Travel</button>
-          <button class="chip" data-cat="Shopping">Shopping</button>
-          <button class="chip" data-cat="Other">Other</button>
+    <main id="app-main" class="app-main">
+      <section id="welcome" class="screen welcome-screen active" aria-labelledby="welcome-title">
+        <div class="onboarding-progress" aria-label="Step 1 of 3">
+          <div class="eyebrow-row">
+            <span>YOUR SEMESTER, SORTED</span>
+            <span>01 / 03</span>
+          </div>
+          <div class="progress-track"><span style="width: 34%"></span></div>
         </div>
-      
-        <p id="add-error" class="error" hidden>Enter an amount greater than 0.</p>
-      
-        <button id="save-expense">Save expense</button>
-        <button data-goto="home" class="secondary">Cancel</button>
+        <div class="welcome-content">
+          <img src="assets/pocket-logo.png" alt="" class="hero-mark">
+          <p class="kicker">LESS MONEY STRESS. MORE CAMPUS LIFE.</p>
+          <h1 id="welcome-title">Big semester.<br>Little money moves.</h1>
+          <p class="lead">Meet pocket, your student budgeting companion. Make room for what matters.</p>
+          <ul class="benefit-list">
+            <li><span class="benefit-icon" aria-hidden="true">▱</span><span><strong>One semester. One clear plan.</strong><small>Turn your allowance into a weekly budget.</small></span></li>
+            <li><span class="benefit-icon" aria-hidden="true">＋</span><span><strong>Log it, then get on with life.</strong><small>Keep track of the little spends in seconds.</small></span></li>
+            <li><span class="benefit-icon" aria-hidden="true">⌁</span><span><strong>See what’s ahead.</strong><small>Spot patterns before your balance surprises you.</small></span></li>
+          </ul>
+          <button class="button button-primary button-wide" type="button" data-goto="plan">Let’s build my budget <span aria-hidden="true">→</span></button>
+          <p class="microcopy">About 2 minutes · No bank connection needed</p>
+        </div>
       </section>
 
-      <section id="alert" class="screen">
-        <div class="alert-box">
-          <h2 id="alert-title">Careful, you're close to your limit</h2>
-          <p id="alert-message"></p>
+      <section id="plan" class="screen" aria-labelledby="plan-title">
+        <div class="onboarding-progress">
+          <div class="eyebrow-row"><span>YOUR SEMESTER, SORTED</span><span>02 / 03</span></div>
+          <div class="progress-track"><span style="width: 67%"></span></div>
         </div>
-        <button id="alert-ok">Got it</button>
+        <div class="screen-heading">
+          <h1 id="plan-title">Make this semester yours.</h1>
+          <p>Start with what you have. We’ll help it go further.</p>
+        </div>
+        <form id="plan-form" novalidate>
+          <label class="field-label" for="semester-name">SEMESTER NAME</label>
+          <input id="semester-name" class="text-input" type="text" maxlength="40" placeholder="e.g. Autumn semester">
+
+          <div class="field-grid">
+            <div>
+              <label class="field-label" for="start-date">STARTS</label>
+              <input id="start-date" class="text-input" type="date" required>
+            </div>
+            <div>
+              <label class="field-label" for="end-date">ENDS</label>
+              <input id="end-date" class="text-input" type="date" required>
+            </div>
+          </div>
+
+          <label class="field-label" for="total">TOTAL AVAILABLE FOR THE SEMESTER</label>
+          <div class="money-input-wrap">
+            <span aria-hidden="true">₹</span>
+            <input id="total" type="number" inputmode="numeric" min="1" step="1" placeholder="10,000" required>
+            <small>INR</small>
+          </div>
+          <p class="input-caption">Allowance, savings or scholarship funds.</p>
+
+          <div class="weekly-preview-card">
+            <span class="field-label">YOUR WEEKLY BUDGET</span>
+            <strong id="weekly-preview">₹— <small>/ week</small></strong>
+            <p id="weeks-preview">Choose your dates and total to see your plan.</p>
+          </div>
+          <p id="plan-error" class="error-message" role="alert" hidden></p>
+          <button class="button button-primary button-wide" type="submit">Next: choose categories <span aria-hidden="true">→</span></button>
+        </form>
       </section>
-      
-    <section id="home" class="screen">
-      <h2>Home</h2>
-      <button data-goto="welcome">Back</button>
-      <h2>Left this week</h2>
-      <p id="left-this-week" class="big-number"></p>
-      <p id="week-label" class="hint"></p>
-      <h3>Recent expenses</h3>
-      <ul id="expense-list"></ul>
-      <button data-goto="add">+ Add expense</button>
-    </section>
-  </main>
+
+      <section id="category-plan" class="screen" aria-labelledby="category-title">
+        <div class="onboarding-progress">
+          <div class="eyebrow-row"><span>YOUR SEMESTER, SORTED</span><span>03 / 03</span></div>
+          <div class="progress-track"><span style="width: 100%"></span></div>
+        </div>
+        <div class="screen-heading">
+          <h1 id="category-title">A place for every rupee.</h1>
+          <p>Split your weekly budget into the things you spend on most.</p>
+        </div>
+        <div id="category-editor" class="category-editor"></div>
+        <button id="add-category" class="text-button add-category-button" type="button">＋ Add a category</button>
+        <div class="allocation-summary">
+          <span class="field-label">WEEKLY TOTAL ALLOCATED</span>
+          <strong id="allocation-total">₹0 / ₹0</strong>
+          <p id="allocation-message" class="allocation-message"></p>
+        </div>
+        <p id="category-error" class="error-message" role="alert" hidden></p>
+        <button id="create-plan" class="button button-primary button-wide" type="button">Create my plan <span aria-hidden="true">✓</span></button>
+      </section>
+
+      <section id="home" class="screen" aria-labelledby="home-title">
+        <div class="screen-heading dashboard-heading">
+          <div><h1 id="home-title">A little clarity, daily.</h1><p id="home-date"></p></div>
+          <button class="icon-button" type="button" data-goto="week" aria-label="Open weekly overview">⌁</button>
+        </div>
+        <article class="balance-card" id="balance-card">
+          <div class="balance-card-top"><span>LEFT TO SPEND THIS WEEK</span><span id="home-week-number"></span></div>
+          <strong id="home-left" class="balance-amount">₹0</strong>
+          <span id="home-status" class="status-pill">On track</span>
+          <div class="balance-meter"><span id="home-meter"></span></div>
+          <div class="balance-card-bottom"><span id="home-spent">₹0 spent</span><span id="home-percent"></span></div>
+        </article>
+        <article class="content-card">
+          <div class="card-heading"><h2>This week by day</h2><span>IN RUPEES</span></div>
+          <div id="day-chart" class="day-chart" aria-label="Daily spending this week"></div>
+        </article>
+        <div class="section-title-row"><h2>Where it went</h2><button class="text-button" type="button" data-goto="week">View week →</button></div>
+        <div id="home-categories" class="home-categories"></div>
+        <aside id="home-insight" class="insight-callout"></aside>
+      </section>
+
+      <section id="add" class="screen" aria-labelledby="add-title">
+        <div class="screen-heading add-heading">
+          <div><p class="eyebrow">QUICK LITTLE CHECK</p><h1 id="add-title">New spend</h1></div>
+          <button class="text-button" type="button" data-goto="home">Cancel</button>
+        </div>
+        <form id="expense-form" novalidate>
+          <label class="amount-label" for="amount">HOW MUCH DID YOU SPEND?</label>
+          <div class="large-amount-input"><span>₹</span><input id="amount" type="number" inputmode="numeric" min="1" step="1" placeholder="0" required></div>
+          <div class="suggestion-card">
+            <span class="field-label">✧ WE THINK THIS IS</span>
+            <div id="expense-categories" class="expense-category-list"></div>
+            <button id="cycle-category" class="text-button" type="button">Not right? Pick another →</button>
+          </div>
+          <div class="date-row">
+            <div><span class="field-label">DATE</span><strong id="expense-date-label"></strong></div>
+            <label class="date-change-button" for="expense-date">▦ Change date<input id="expense-date" type="date"></label>
+          </div>
+          <label class="field-label" for="expense-note">NOTE · OPTIONAL</label>
+          <input id="expense-note" class="text-input" type="text" maxlength="80" placeholder="What was it for?">
+          <div class="expense-preview"><span id="expense-impact">After this spend, your weekly balance will update.</span></div>
+          <p id="expense-error" class="error-message" role="alert" hidden></p>
+          <button class="button button-primary button-wide" type="submit">Save spend <span aria-hidden="true">✓</span></button>
+        </form>
+      </section>
+
+      <section id="alert" class="screen" aria-labelledby="alert-title">
+        <div class="alert-topline"><span>⚠ OVER BUDGET</span><button class="icon-button" type="button" data-goto="home" aria-label="Close alert">×</button></div>
+        <h1 id="alert-title">A quick budget check.</h1>
+        <p id="alert-week-label" class="lead"></p>
+        <article class="alert-balance">
+          <span>LEFT TO SPEND THIS WEEK</span>
+          <strong id="alert-left">−₹0</strong>
+          <small id="alert-spent"></small>
+        </article>
+        <article class="content-card">
+          <div class="card-heading"><h2>This week by day</h2><span>IN RUPEES</span></div>
+          <div id="alert-day-chart" class="day-chart"></div>
+        </article>
+        <article class="alert-panel">
+          <div class="alert-panel-label">⚠ OVERBUDGET</div>
+          <h2 id="alert-message">You’re over this week.</h2>
+          <p>It happens. A small adjustment now can help keep the rest of your semester on track.</p>
+          <button class="button button-primary button-wide" type="button" data-goto="plan">Adjust my plan <span aria-hidden="true">→</span></button>
+          <button class="button button-outline button-wide" type="button" data-goto="home">Got it!</button>
+        </article>
+      </section>
+
+      <section id="week" class="screen" aria-labelledby="week-title">
+        <div class="screen-heading"><h1 id="week-title">Your week, unpacked.</h1></div>
+        <div class="week-switcher">
+          <button id="previous-week" class="icon-button" type="button" aria-label="Previous week">‹</button>
+          <strong id="week-range-label"></strong>
+          <button id="next-week" class="icon-button" type="button" aria-label="Next week">›</button>
+        </div>
+        <div class="week-summary">
+          <div><span>BUDGET</span><strong id="week-budget"></strong></div>
+          <div><span>SPENT</span><strong id="week-spent"></strong></div>
+          <div><span id="week-delta-label">LEFT</span><strong id="week-delta"></strong></div>
+        </div>
+        <div class="section-title-row"><h2>By category</h2><span class="field-label">SPENT / BUDGET</span></div>
+        <div id="week-categories" class="week-categories"></div>
+        <div class="section-title-row transaction-heading"><h2>Transaction history</h2><span id="transaction-count" class="field-label"></span></div>
+        <ul id="transaction-list" class="transaction-list"></ul>
+        <p id="empty-week" class="empty-state" hidden>No spends logged for this week yet. Your next little money move starts here.</p>
+      </section>
+
+      <section id="insights" class="screen" aria-labelledby="insights-title">
+        <div class="screen-heading"><h1 id="insights-title">See the bigger picture.</h1><p>Your habits today. Your semester ahead.</p></div>
+        <article class="content-card insights-month-card">
+          <div class="card-heading"><h2 id="month-title"></h2><span id="month-range"></span></div>
+          <div class="donut-layout">
+            <div id="month-donut" class="donut-chart"><span id="month-total"></span></div>
+            <ul id="month-legend" class="chart-legend"></ul>
+          </div>
+        </article>
+        <article class="content-card projection-card">
+          <h2>Semester projection</h2>
+          <p id="projection-summary"></p>
+          <div class="projection-track"><span id="projection-progress"></span></div>
+          <div class="projection-labels"><span>Plan total</span><span id="projection-spent"></span><span>Remaining</span></div>
+          <div id="projection-callout" class="projection-callout"></div>
+        </article>
+      </section>
+
+      <p id="app-message" class="app-message" role="status" aria-live="polite" hidden></p>
+    </main>
+
+    <nav class="bottom-nav" aria-label="Main navigation">
+      <button type="button" data-nav="home"><span aria-hidden="true">⌂</span><small>Home</small></button>
+      <button type="button" data-nav="plan"><span aria-hidden="true">▱</span><small>Plan</small></button>
+      <button type="button" data-nav="add" class="nav-add"><span aria-hidden="true">＋</span><small>Add</small></button>
+      <button type="button" data-nav="week"><span aria-hidden="true">▦</span><small>Week</small></button>
+      <button type="button" data-nav="insights"><span aria-hidden="true">⌁</span><small>Insights</small></button>
+    </nav>
+  </div>
   <script src="js/data.js"></script>
-  <script src="js/budget.js"></script> 
-  <script src="js/app.js"></script> 
+  <script src="js/budget.js"></script>
+  <script src="js/app.js"></script>
 </body>
 </html>
