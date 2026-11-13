@@ -135,7 +135,82 @@ function deleteExpense(id) {
   writeJSON(KEYS.expenses, getExpenses().filter(item => item.id !== id));
 }
 
+function restoreExpense(expense) {
+  const expenses = getExpenses();
+  if (expenses.some(item => item.id === String(expense.id))) return false;
+  expenses.push({ ...expense, id: String(expense.id) });
+  writeJSON(KEYS.expenses, expenses);
+  return true;
+}
+
 function resetAll() {
   localStorage.removeItem(KEYS.budget);
   localStorage.removeItem(KEYS.expenses);
+}
+
+function exportBudgetData() {
+  const budget = getBudget();
+  if (!budget) return null;
+  return {
+    version: 1,
+    exportedAt: new Date().toISOString(),
+    budget: {
+      ...budget,
+      categories: budget.categories.map(category => ({ ...category }))
+    },
+    expenses: getExpenses().map(expense => ({ ...expense }))
+  };
+}
+
+function importBudgetData(payload) {
+  if (!payload || typeof payload !== 'object') {
+    throw new Error('Backup data is missing or invalid.');
+  }
+
+  const budgetData = payload.budget || payload;
+  const total = Number(budgetData.total);
+  const startDate = budgetData.startDate;
+  const endDate = budgetData.endDate || startDate;
+  const weeks = Number(budgetData.weeks || getWeeksInRange(startDate, endDate));
+
+  if (!(total > 0) || !startDate || !endDate || !Number.isInteger(weeks) || weeks < 1) {
+    throw new Error('This backup file does not contain a valid semester budget.');
+  }
+
+  const categories = Array.isArray(budgetData.categories) && budgetData.categories.length
+    ? budgetData.categories.map(category => ({
+        id: category.id || String(category.name || 'category').toLowerCase().replace(/\s+/g, '-'),
+        name: String(category.name || 'Category').trim() || 'Category',
+        weeklyLimit: Number(category.weeklyLimit || 0),
+        icon: category.icon || '',
+        color: category.color || ''
+      }))
+    : getDefaultCategories(total, weeks);
+
+  const normalizedBudget = {
+    total: total,
+    startDate: startDate,
+    endDate: endDate,
+    semesterName: budgetData.semesterName || 'My semester',
+    weeks: weeks,
+    categories: categories
+  };
+
+  const importedExpenses = Array.isArray(payload.expenses) ? payload.expenses : [];
+  const normalizedExpenses = importedExpenses.map((expense, index) => {
+    const amount = Number(expense.amount || 0);
+    const categoryId = expense.categoryId ||
+      ([expense.category, expense.categoryName].find(value => value) || 'other').toLowerCase();
+    return {
+      id: String(expense.id ?? ('imported-' + index + '-' + Date.now())),
+      amount: amount,
+      categoryId: categoryId,
+      date: expense.date || startDate,
+      note: expense.note || ''
+    };
+  });
+
+  writeJSON(KEYS.budget, normalizedBudget);
+  writeJSON(KEYS.expenses, normalizedExpenses);
+  return normalizedBudget;
 }

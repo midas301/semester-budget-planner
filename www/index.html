@@ -95,6 +95,7 @@
           <h1 id="category-title">A place for every rupee.</h1>
           <p>Split your weekly budget into the things you spend on most.</p>
         </div>
+        <button id="category-presets" class="button button-secondary button-wide category-presets" type="button">＋ Add student categories</button>
         <div id="category-editor" class="category-editor"></div>
         <button id="add-category" class="text-button add-category-button" type="button">＋ Add a category</button>
         <div class="allocation-summary">
@@ -120,10 +121,19 @@
         </article>
         <article class="content-card">
           <div class="card-heading"><h2>This week by day</h2><span>IN RUPEES</span></div>
-          <div id="day-chart" class="day-chart" aria-label="Daily spending this week"></div>
+          <div id="day-chart" class="day-chart" role="group" aria-label="Daily spending this week"></div>
         </article>
         <div class="section-title-row"><h2>Where it went</h2><button class="text-button" type="button" data-goto="week">View week →</button></div>
         <div id="home-categories" class="home-categories"></div>
+        <p id="home-empty" class="empty-state" hidden>No spends logged yet. Add your first spend to start seeing your habits.</p>
+        <button class="button button-primary button-wide empty-action" type="button" data-goto="add" hidden>Add your first spend</button>
+        <div class="utility-actions">
+          <button id="export-data" class="button button-secondary utility-button" type="button">Export backup</button>
+          <label for="import-data-file" class="button button-secondary utility-button file-button">Import backup
+            <input id="import-data-file" class="sr-only" type="file" accept="application/json" aria-label="Choose a pocket backup file">
+          </label>
+        </div>
+        <p class="backup-reminder">Your budget is saved on this device only. Export a backup before switching devices or reinstalling.</p>
         <aside id="home-insight" class="insight-callout"></aside>
       </section>
 
@@ -135,6 +145,11 @@
         <form id="expense-form" novalidate>
           <label class="amount-label" for="amount">HOW MUCH DID YOU SPEND?</label>
           <div class="large-amount-input"><span>₹</span><input id="amount" type="number" inputmode="numeric" min="1" step="1" placeholder="0" required></div>
+          <div class="quick-amounts" role="group" aria-label="Common spend amounts">
+            <button class="quick-chip" type="button" data-expense-amount="50">₹50</button>
+            <button class="quick-chip" type="button" data-expense-amount="100">₹100</button>
+            <button class="quick-chip" type="button" data-expense-amount="200">₹200</button>
+          </div>
           <div class="suggestion-card">
             <span class="field-label">✧ WE THINK THIS IS</span>
             <div id="expense-categories" class="expense-category-list"></div>
@@ -143,6 +158,10 @@
           <div class="date-row">
             <div><span class="field-label">DATE</span><strong id="expense-date-label"></strong></div>
             <label class="date-change-button" for="expense-date">▦ Change date<input id="expense-date" type="date"></label>
+          </div>
+          <div class="date-shortcuts" role="group" aria-label="Choose a recent date">
+            <button class="quick-chip" type="button" data-expense-date="today">Today</button>
+            <button class="quick-chip" type="button" data-expense-date="yesterday">Yesterday</button>
           </div>
           <label class="field-label" for="expense-note">NOTE · OPTIONAL</label>
           <input id="expense-note" class="text-input" type="text" maxlength="80" placeholder="What was it for?">
@@ -163,7 +182,7 @@
         </article>
         <article class="content-card">
           <div class="card-heading"><h2>This week by day</h2><span>IN RUPEES</span></div>
-          <div id="alert-day-chart" class="day-chart"></div>
+          <div id="alert-day-chart" class="day-chart" role="group" aria-label="Daily spending this week"></div>
         </article>
         <article class="alert-panel">
           <div class="alert-panel-label">⚠ OVERBUDGET</div>
@@ -190,7 +209,10 @@
         <div id="week-categories" class="week-categories"></div>
         <div class="section-title-row transaction-heading"><h2>Transaction history</h2><span id="transaction-count" class="field-label"></span></div>
         <ul id="transaction-list" class="transaction-list"></ul>
-        <p id="empty-week" class="empty-state" hidden>No spends logged for this week yet. Your next little money move starts here.</p>
+        <div id="empty-week" class="empty-state" hidden>
+          <p>No spends logged for this week yet. Your next little money move starts here.</p>
+          <button class="button button-primary" type="button" data-goto="add">Add a spend</button>
+        </div>
       </section>
 
       <section id="insights" class="screen" aria-labelledby="insights-title">
@@ -198,8 +220,12 @@
         <article class="content-card insights-month-card">
           <div class="card-heading"><h2 id="month-title"></h2><span id="month-range"></span></div>
           <div class="donut-layout">
-            <div id="month-donut" class="donut-chart"><span id="month-total"></span></div>
+            <div id="month-donut" class="donut-chart" role="img" aria-label="Monthly spending by category"><span id="month-total"></span></div>
             <ul id="month-legend" class="chart-legend"></ul>
+          </div>
+          <div id="month-empty" class="empty-state" hidden>
+            <p>No spending recorded this month yet. Add a spend to see your breakdown.</p>
+            <button class="button button-primary" type="button" data-goto="add">Add a spend</button>
           </div>
         </article>
         <article class="content-card projection-card">
@@ -211,7 +237,10 @@
         </article>
       </section>
 
-      <p id="app-message" class="app-message" role="status" aria-live="polite" hidden></p>
+      <div id="app-message" class="app-message" role="status" aria-live="polite" hidden>
+        <span id="app-message-text"></span>
+        <button id="app-message-undo" class="app-message-undo" type="button" hidden>Undo</button>
+      </div>
     </main>
 
     <nav class="bottom-nav" aria-label="Main navigation">
