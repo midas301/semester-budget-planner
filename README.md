@@ -11,6 +11,7 @@ pocket is a mobile-first budgeting companion that helps students turn semester f
 - Summarizes monthly spending and estimates how long the remaining semester balance may last.
 
 The app does not connect to a bank. Budgets and expenses are stored locally on the device/browser and are not synced to an account.
+Use **Export backup** on the Home screen before switching devices or reinstalling. The resulting JSON file can be restored with **Import backup**.
 
 ## Run locally
 

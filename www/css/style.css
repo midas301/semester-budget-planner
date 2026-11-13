@@ -6,7 +6,7 @@
   --blue: #1760a8;
   --blue-soft: #eaf3fb;
   --ink: #132d47;
-  --muted: #748397;
+  --muted: #596b7d;
   --line: #e0e5e9;
   --gold: #efb231;
   --red: #bd4038;
@@ -28,9 +28,9 @@ body {
   background: #e9ebed;
 }
 
-button, input { font: inherit; }
+button, input, select { font: inherit; }
 button { color: inherit; }
-button:focus-visible, input:focus-visible, a:focus-visible {
+button:focus-visible, input:focus-visible, select:focus-visible, a:focus-visible {
   outline: 3px solid #78a9dc;
   outline-offset: 3px;
 }
@@ -95,8 +95,8 @@ button:focus-visible, input:focus-visible, a:focus-visible {
 
 .icon-button {
   display: inline-grid;
-  width: 38px;
-  height: 38px;
+  width: 44px;
+  height: 44px;
   padding: 0;
   place-items: center;
   border: 1px solid var(--line);
@@ -227,8 +227,26 @@ h1 {
 .button-primary { background: var(--blue); color: var(--white); }
 .button-primary:hover { background: #0e4f91; }
 .button-primary:disabled { background: #a9bfd5; cursor: not-allowed; }
+.button-secondary { border-color: var(--line); background: var(--white); color: var(--navy); }
 .button-wide { display: flex; width: 100%; align-items: center; justify-content: center; gap: 10px; }
 .button-outline { margin-top: 8px; border-color: var(--line); background: var(--white); color: var(--blue); }
+.utility-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin: 18px 0;
+}
+.utility-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 42px;
+  padding: 10px 12px;
+  font-size: 12px;
+}
+.file-button { position: relative; overflow: hidden; }
+.file-button:focus-within { outline: 3px solid #78a9dc; outline-offset: 3px; }
+.backup-reminder { margin: 0 0 14px; color: var(--muted); font-size: 11px; line-height: 1.45; }
 .microcopy { margin: 11px 0 2px; color: var(--muted); font-size: 10px; }
 
 .field-label { display: block; margin: 18px 0 8px; }
@@ -265,12 +283,20 @@ h1 {
 .category-name-input { flex: 1; min-width: 0; border: 0; background: transparent; color: var(--navy); font-size: 14px; font-weight: 700; }
 .category-budget-input { display: flex; width: 78px; min-height: 40px; align-items: center; gap: 2px; padding: 0 8px; border-radius: 9px; font-weight: 700; }
 .category-budget-input input { width: 100%; min-width: 0; border: 0; background: transparent; color: var(--navy); font-weight: 700; }
-.remove-category { width: 25px; height: 30px; border: 0; background: transparent; color: var(--muted); font-size: 20px; cursor: pointer; }
+.remove-category { width: 44px; height: 44px; flex: 0 0 44px; border: 0; border-radius: 9px; background: transparent; color: var(--muted); font-size: 20px; cursor: pointer; }
 .allocation-meter, .category-meter { height: 6px; margin-top: 12px; overflow: hidden; border-radius: 99px; background: var(--line); }
 .allocation-meter span, .category-meter span { display: block; height: 100%; border-radius: inherit; background: var(--blue); }
-.allocation-card-footer { display: flex; justify-content: space-between; padding-top: 5px; color: var(--muted); font-size: 10px; }
+.allocation-card-footer { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding-top: 5px; color: var(--muted); font-size: 10px; }
+.category-appearance-controls { display: flex; align-items: center; gap: 8px; }
+.category-appearance-controls select { min-height: 40px; max-width: 132px; border: 1px solid var(--line); border-radius: 9px; background: var(--white); color: var(--ink); font-size: 11px; }
+.category-color-label, .category-color-label input { display: block; width: 44px; height: 40px; }
+.category-color-label input { padding: 3px; border: 1px solid var(--line); border-radius: 9px; background: var(--white); cursor: pointer; }
+.category-presets { margin: 0 0 14px; font-size: 12px; }
 .text-button { padding: 6px 0; border: 0; background: transparent; color: var(--blue); font-size: 12px; font-weight: 700; cursor: pointer; }
 .add-category-button { display: block; margin: 14px auto 10px; }
+.empty-action { margin: 12px 0; }
+.empty-state p { margin: 0 0 12px; }
+.empty-state .button { margin: 0 auto; }
 .allocation-summary { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 23px; }
 .allocation-summary .field-label { margin: 0; }
 .allocation-summary > strong { color: var(--navy); font-size: 15px; }
@@ -319,6 +345,10 @@ h1 {
 .large-amount-input span { font-size: 40px; }
 .large-amount-input input { width: min(65%, 200px); border: 0; border-bottom: 2px solid var(--blue); border-radius: 0; background: transparent; color: var(--navy); font-size: 56px; text-align: center; }
 .large-amount-input input:focus-visible { outline: 0; border-bottom-color: var(--navy); }
+.quick-amounts, .date-shortcuts { display: flex; justify-content: center; gap: 9px; margin: -18px 0 22px; }
+.date-shortcuts { justify-content: flex-start; margin: -10px 0 18px; }
+.quick-chip { min-width: 56px; min-height: 44px; padding: 8px 13px; border: 1px solid var(--line); border-radius: 999px; background: var(--white); color: var(--blue); font-size: 12px; font-weight: 700; cursor: pointer; }
+.quick-chip:disabled { color: var(--muted); opacity: .6; cursor: not-allowed; }
 .suggestion-card { margin: 0 0 18px; padding: 15px; border-radius: 19px; background: var(--blue-soft); }
 .suggestion-card .field-label { margin: 0 0 10px; color: var(--blue); }
 .expense-category-list { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 5px; }
@@ -331,7 +361,7 @@ h1 {
 .date-row > div { display: grid; gap: 5px; }
 .date-row .field-label { margin: 0; }
 .date-row strong { color: var(--navy); font-size: 13px; font-weight: 500; }
-.date-change-button { position: relative; padding: 9px 11px; border: 1px solid var(--line); border-radius: 10px; background: transparent; color: var(--blue); font-size: 11px; font-weight: 600; }
+.date-change-button { position: relative; display: inline-flex; min-height: 44px; align-items: center; padding: 9px 11px; border: 1px solid var(--line); border-radius: 10px; background: transparent; color: var(--blue); font-size: 11px; font-weight: 600; }
 .date-change-button input { position: absolute; inset: 0; width: 100%; opacity: 0; }
 .expense-preview { margin: 38px 0 11px; color: var(--muted); font-size: 11px; text-align: center; }
 
@@ -346,14 +376,15 @@ h1 {
 
 .week-switcher { display: flex; align-items: center; justify-content: space-between; min-height: 42px; margin: 18px 0; padding: 2px 6px; border-radius: 12px; background: var(--white); }
 .week-switcher strong { color: var(--navy); font-size: 13px; }
-.week-switcher .icon-button { width: 32px; height: 32px; border: 0; }
+.week-switcher .icon-button { width: 44px; height: 44px; border: 0; }
 .week-summary { display: grid; grid-template-columns: repeat(3, 1fr); gap: 9px; margin: 0 0 22px; padding: 17px; border-radius: 19px; background: var(--navy); color: var(--white); }
 .week-summary > div { display: grid; gap: 7px; min-width: 0; }
 .week-summary span { color: #d6e2ed; font-size: 9px; }
 .week-summary strong { overflow: hidden; font-size: clamp(18px, 5vw, 25px); font-weight: 500; text-overflow: ellipsis; }
 .week-category-row { margin: 10px 0 15px; }
 .week-category-heading { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
-.week-category-heading span { font-size: 12px; }
+.week-category-heading > span { display: inline-flex; align-items: center; gap: 7px; font-size: 12px; }
+.week-category-heading .week-category-icon { width: 30px; height: 30px; border-radius: 9px; font-size: 14px; }
 .week-category-heading strong { font-size: 11px; }
 .category-meter { height: 6px; margin-top: 7px; }
 .category-meter span.over { background: var(--red); }
@@ -365,7 +396,7 @@ h1 {
 .transaction-details strong { overflow: hidden; color: var(--navy); font-size: 12px; font-weight: 500; text-overflow: ellipsis; white-space: nowrap; }
 .transaction-details small { color: var(--muted); font-size: 9px; }
 .transaction-amount { color: var(--navy); font-size: 11px; white-space: nowrap; }
-.transaction-edit { padding: 5px; border: 0; background: transparent; color: var(--blue); font-size: 10px; cursor: pointer; }
+.transaction-edit { min-width: 44px; min-height: 44px; padding: 5px; border: 0; border-radius: 8px; background: transparent; color: var(--blue); font-size: 10px; cursor: pointer; }
 .empty-state, .muted-empty { padding: 18px 8px; color: var(--muted); font-size: 12px; line-height: 1.5; text-align: center; }
 
 .insights-month-card { padding: 19px; }
@@ -403,6 +434,7 @@ h1 {
 
 .bottom-nav button {
   display: flex;
+  min-height: 48px;
   min-width: 0;
   flex-direction: column;
   align-items: center;
@@ -430,6 +462,10 @@ h1 {
   left: 20px;
   width: fit-content;
   max-width: calc(100% - 40px);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
   margin: auto;
   padding: 11px 16px;
   border-radius: 12px;
@@ -438,6 +474,9 @@ h1 {
   font-size: 12px;
   box-shadow: 0 6px 22px rgb(0 0 0 / 18%);
 }
+
+.app-message-undo { min-width: 44px; min-height: 44px; padding: 8px; border: 0; border-radius: 8px; background: transparent; color: #fff; font-size: 12px; font-weight: 800; text-decoration: underline; cursor: pointer; }
+.app-message-undo:focus-visible { outline-color: #fff; }
 
 [hidden] { display: none !important; }
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; clip-path: inset(50%); }

@@ -114,3 +114,38 @@ test('week status identifies dates outside the semester', () => {
   assert.equal(context.getWeekStatus('2025-07-31').beforeSemester, true);
   assert.equal(context.getWeekStatus('2025-12-20').afterSemester, true);
 });
+
+test('budget backups can be exported and restored', () => {
+  const { context } = createAppContext();
+  saveSamplePlan(context);
+  const budget = context.getBudget();
+  budget.categories[0].icon = '♡';
+  budget.categories[0].color = '#123456';
+  context.saveBudget(
+    budget.total,
+    budget.startDate,
+    budget.endDate,
+    budget.semesterName,
+    budget.weeks,
+    budget.categories
+  );
+  const expense = context.addExpense(220, 'food', '2025-08-04', 'Snacks');
+
+  const backup = context.exportBudgetData();
+  assert.equal(backup.budget.total, 10000);
+  assert.equal(backup.expenses[0].id, expense.id);
+
+  context.resetAll();
+  assert.equal(context.getBudget(), null);
+
+  const restored = context.importBudgetData(backup);
+  assert.equal(restored.total, 10000);
+  assert.equal(restored.categories[0].icon, '♡');
+  assert.equal(restored.categories[0].color, '#123456');
+  assert.equal(context.getExpenses().length, 1);
+  assert.equal(context.getSpentInRange('2025-08-01', '2025-08-07'), 220);
+  context.deleteExpense(expense.id);
+  assert.equal(context.restoreExpense(expense), true);
+  assert.equal(context.restoreExpense(expense), false);
+  assert.equal(context.getExpenses().length, 1);
+});

@@ -7,6 +7,7 @@ let selectedCategoryId = null;
 let editingExpenseId = null;
 let visibleWeekIndex = null;
 let messageTimer = null;
+let undoAction = null;
 
 function byId(id) {
   return document.getElementById(id);
@@ -27,13 +28,39 @@ function formatDate(isoDate, options) {
 
 function showMessage(message) {
   const element = byId('app-message');
-  element.textContent = message;
+  byId('app-message-text').textContent = message;
+  byId('app-message-undo').hidden = true;
+  undoAction = null;
   element.hidden = false;
   window.clearTimeout(messageTimer);
   messageTimer = window.setTimeout(() => {
     element.hidden = true;
   }, 3200);
 }
+
+function showUndoMessage(message, action) {
+  const element = byId('app-message');
+  window.clearTimeout(messageTimer);
+  byId('app-message-text').textContent = message;
+  byId('app-message-undo').hidden = false;
+  undoAction = action;
+  element.hidden = false;
+  messageTimer = window.setTimeout(() => {
+    element.hidden = true;
+    byId('app-message-undo').hidden = true;
+    undoAction = null;
+  }, 5000);
+}
+
+byId('app-message-undo').addEventListener('click', () => {
+  if (!undoAction) return;
+  const action = undoAction;
+  window.clearTimeout(messageTimer);
+  undoAction = null;
+  byId('app-message').hidden = true;
+  byId('app-message-undo').hidden = true;
+  action();
+});
 
 function getCategoryName(categoryId) {
   const budget = getBudget();
@@ -42,11 +69,40 @@ function getCategoryName(categoryId) {
 }
 
 function getCategoryIcon(category) {
+  if (category.icon) return category.icon;
   const value = (category.name + ' ' + category.id).toLowerCase();
   if (value.includes('food') || value.includes('cafe') || value.includes('meal')) return '♧';
   if (value.includes('transport') || value.includes('travel') || value.includes('bus')) return '▰';
   if (value.includes('book') || value.includes('study')) return '▤';
   return '✧';
+}
+
+function getCategoryColor(category, index) {
+  const budget = getBudget();
+  const categoryIndex = Number.isInteger(index) && index >= 0
+    ? index
+    : budget
+      ? Math.max(0, budget.categories.findIndex(item => item.id === category.id))
+      : 0;
+  return /^#[0-9a-f]{6}$/i.test(category.color || '')
+    ? category.color
+    : CATEGORY_COLORS[categoryIndex % CATEGORY_COLORS.length];
+}
+
+function setCategoryIcon(element, category, index) {
+  const color = getCategoryColor(category, index);
+  const channels = color.match(/^#([0-9a-f]{6})$/i);
+  const luminance = channels
+    ? channels[1].match(/../g).map(channel => {
+        const value = parseInt(channel, 16) / 255;
+        return value <= 0.03928 ? value / 12.92 : Math.pow((value + 0.055) / 1.055, 2.4);
+      }).reduce((sum, value, channel) =>
+        sum + value * [0.2126, 0.7152, 0.0722][channel], 0)
+    : 0;
+  element.textContent = getCategoryIcon(category);
+  element.setAttribute('aria-hidden', 'true');
+  element.style.backgroundColor = color;
+  element.style.color = luminance > 0.45 ? '#132d47' : '#ffffff';
 }
 
 function showScreen(id) {
@@ -205,7 +261,7 @@ function renderCategoryEditor() {
     header.className = 'allocation-card-header';
     const icon = document.createElement('span');
     icon.className = 'category-icon';
-    icon.textContent = getCategoryIcon(category);
+    setCategoryIcon(icon, category, index);
     const name = document.createElement('input');
     name.type = 'text';
     name.className = 'category-name-input';
@@ -250,11 +306,42 @@ function renderCategoryEditor() {
 
     const footer = document.createElement('div');
     footer.className = 'allocation-card-footer';
-    const description = document.createElement('span');
-    description.textContent = category.description || '';
     const percent = document.createElement('span');
     percent.textContent = Math.round(percentage) + '%';
-    footer.append(description, percent);
+    const appearance = document.createElement('div');
+    appearance.className = 'category-appearance-controls';
+    const iconSelect = document.createElement('select');
+    iconSelect.dataset.categoryIndex = String(index);
+    iconSelect.dataset.categoryField = 'icon';
+    iconSelect.setAttribute('aria-label', 'Icon for ' + category.name);
+    [
+      ['♧', 'Food'],
+      ['▰', 'Transport'],
+      ['▤', 'Study'],
+      ['✧', 'Other'],
+      ['◇', 'Shopping'],
+      ['+', 'Health']
+    ].forEach(([value, labelText]) => {
+      const option = document.createElement('option');
+      option.value = value;
+      option.textContent = value + ' ' + labelText;
+      iconSelect.appendChild(option);
+    });
+    iconSelect.value = getCategoryIcon(category);
+    const colorLabel = document.createElement('label');
+    colorLabel.className = 'category-color-label';
+    const colorText = document.createElement('span');
+    colorText.className = 'sr-only';
+    colorText.textContent = 'Color for ' + category.name;
+    const colorInput = document.createElement('input');
+    colorInput.type = 'color';
+    colorInput.value = getCategoryColor(category, index);
+    colorInput.dataset.categoryIndex = String(index);
+    colorInput.dataset.categoryField = 'color';
+    colorInput.setAttribute('aria-label', 'Color for ' + category.name);
+    colorLabel.append(colorText, colorInput);
+    appearance.append(iconSelect, colorLabel);
+    footer.append(percent, appearance);
     card.append(header, meter, footer);
     editor.appendChild(card);
   });
@@ -268,8 +355,23 @@ byId('category-editor').addEventListener('input', event => {
   if (!category) return;
   if (input.dataset.categoryField === 'weeklyLimit') {
     category.weeklyLimit = Math.max(0, Number(input.value) || 0);
+  } else if (input.dataset.categoryField === 'icon') {
+    category.icon = input.value;
+  } else if (input.dataset.categoryField === 'color') {
+    category.color = input.value;
   } else {
     category.name = input.value;
+  }
+  if (input.dataset.categoryField === 'icon' || input.dataset.categoryField === 'color') {
+    const card = input.closest('.allocation-card');
+    const icon = card && card.querySelector('.category-icon');
+    if (icon) setCategoryIcon(icon, category, Number(input.dataset.categoryIndex));
+  } else if (input.dataset.categoryField === 'name') {
+    const card = input.closest('.allocation-card');
+    const amountInput = card && card.querySelector('[data-category-field="weeklyLimit"]');
+    const removeButton = card && card.querySelector('[data-remove-index]');
+    if (amountInput) amountInput.setAttribute('aria-label', 'Weekly budget for ' + category.name);
+    if (removeButton) removeButton.setAttribute('aria-label', 'Remove ' + category.name);
   }
   updateAllocationSummary();
 });
@@ -296,6 +398,36 @@ byId('add-category').addEventListener('click', () => {
   renderCategoryEditor();
   const inputs = byId('category-editor').querySelectorAll('.category-name-input');
   inputs[inputs.length - 1].focus();
+});
+
+byId('category-presets').addEventListener('click', () => {
+  const presets = [
+    { id: 'food', name: 'Food', icon: '♧', color: '#1760a8' },
+    { id: 'transport', name: 'Transport', icon: '▰', color: '#edae32' },
+    { id: 'study', name: 'Study', icon: '▤', color: '#7b6aa8' },
+    { id: 'housing', name: 'Housing', icon: '◇', color: '#6b8f71' },
+    { id: 'entertainment', name: 'Entertainment', icon: '✧', color: '#d17b45' },
+    { id: 'health', name: 'Health', icon: '+', color: '#b83c34' },
+    { id: 'other', name: 'Other', icon: '✧', color: '#748397' }
+  ];
+  const existingNames = new Set(draftCategories.map(category => category.name.trim().toLowerCase()));
+  let added = 0;
+  presets.forEach(preset => {
+    if (existingNames.has(preset.name.toLowerCase())) return;
+    let id = preset.id;
+    let suffix = 2;
+    while (draftCategories.some(category => category.id === id)) {
+      id = preset.id + '-' + suffix;
+      suffix += 1;
+    }
+    draftCategories.push({ ...preset, id: id, weeklyLimit: 0 });
+    existingNames.add(preset.name.toLowerCase());
+    added += 1;
+  });
+  renderCategoryEditor();
+  showMessage(added
+    ? 'Student categories added. Set budgets for the ones you use.'
+    : 'Your plan already has all the student categories.');
 });
 
 function updateAllocationSummary() {
@@ -354,7 +486,9 @@ byId('create-plan').addEventListener('click', () => {
     draftCategories.map(category => ({
       id: category.id,
       name: category.name.trim(),
-      weeklyLimit: Number(category.weeklyLimit)
+      weeklyLimit: Number(category.weeklyLimit),
+      icon: category.icon || '',
+      color: category.color || ''
     }))
   );
   draftPlan = null;
@@ -436,7 +570,7 @@ function renderCategoryRows(containerId, budget, weekIndex, range, includeEmpty)
     row.className = 'category-spend-row';
     const icon = document.createElement('span');
     icon.className = 'category-icon';
-    icon.textContent = getCategoryIcon(category);
+    setCategoryIcon(icon, category, budget.categories.indexOf(category));
     const copy = document.createElement('div');
     copy.className = 'category-spend-copy';
     const title = document.createElement('strong');
@@ -450,6 +584,39 @@ function renderCategoryRows(containerId, budget, weekIndex, range, includeEmpty)
     row.append(icon, copy, amount);
     container.appendChild(row);
   });
+}
+
+function getBudgetGuidance(status) {
+  const budget = getBudget();
+  if (!budget || !status) return 'You’re on track with your semester plan.';
+
+  const range = getWeekRange(budget, status.weekIndex);
+  const totals = getCategoryTotals(range.start, range.end);
+  const topCategoryId = Object.entries(totals).sort((a, b) => b[1] - a[1])[0]?.[0];
+  const topCategoryName = topCategoryId ? getCategoryName(topCategoryId) : 'your main spending area';
+
+  if (status.level === 'over') {
+    const overAmount = Math.abs(status.left);
+    const trimTarget = Math.max(50, Math.ceil(overAmount / 2));
+    return 'You’re ' + formatCurrency(overAmount) + ' over this week. The biggest spend is in ' +
+      topCategoryName + '. Trim about ' + formatCurrency(trimTarget) + ' there and you’ll be back on track.';
+  }
+
+  if (status.level === 'warning') {
+    const remaining = Math.max(0, status.weeklyBudget - status.spent);
+    return 'You’ve used ' + formatCurrency(status.spent) + ' of ' + formatCurrency(status.weeklyBudget) + ' this week. ' +
+      formatCurrency(remaining) + ' remains before you hit the weekly cap.';
+  }
+
+  if (status.beforeSemester) {
+    return 'Your plan starts on ' + formatDate(budget.startDate, { day: 'numeric', month: 'short' }) + '. You can log spending once it begins.';
+  }
+
+  if (status.afterSemester) {
+    return 'Your semester has ended. Review what you spent and set your next plan.';
+  }
+
+  return 'You’re pacing well. Keep your weekly spending close to ' + formatCurrency(status.weeklyBudget) + ' to stay steady.';
 }
 
 function renderHome() {
@@ -480,6 +647,10 @@ function renderHome() {
   }
   renderDayChart('day-chart', range);
   renderCategoryRows('home-categories', budget, status.weekIndex, range, false);
+  const hasExpenses = getExpenses().length > 0;
+  byId('home-categories').hidden = !hasExpenses;
+  byId('home-empty').hidden = hasExpenses;
+  byId('home').querySelector('.empty-action').hidden = hasExpenses;
   renderHomeInsight(budget, status);
 }
 
@@ -494,10 +665,10 @@ function renderHomeInsight(budget, status) {
     description.textContent = 'Small choices. A stronger semester.';
   } else if (status.level === 'over') {
     title.textContent = formatCurrency(Math.abs(status.left)) + ' over this week';
-    description.textContent = 'A small adjustment can help you get back on track.';
+    description.textContent = getBudgetGuidance(status);
   } else {
     title.textContent = formatCurrency(budget.total - totalSpent) + ' left for your semester';
-    description.textContent = 'You’re building a clearer picture, one spend at a time.';
+    description.textContent = getBudgetGuidance(status);
   }
   callout.append(title, description);
 }
@@ -527,6 +698,7 @@ function beginExpense(expense) {
   byId('expense-date-label').textContent = formatDate(byId('expense-date').value, {
     weekday: 'long', day: 'numeric', month: 'short'
   });
+  updateDateShortcuts();
   renderExpenseCategories();
   updateExpensePreview();
   showScreen('add');
@@ -545,7 +717,7 @@ function renderExpenseCategories() {
     button.setAttribute('aria-pressed', category.id === selectedCategoryId ? 'true' : 'false');
     const icon = document.createElement('span');
     icon.className = 'category-icon';
-    icon.textContent = getCategoryIcon(category);
+    setCategoryIcon(icon, category, budget.categories.indexOf(category));
     const name = document.createElement('strong');
     name.textContent = category.name;
     button.append(icon, name);
@@ -588,8 +760,39 @@ function updateExpensePreview() {
   });
 }
 
+document.querySelectorAll('[data-expense-amount]').forEach(button => {
+  button.addEventListener('click', () => {
+    byId('amount').value = button.dataset.expenseAmount;
+    byId('amount').focus();
+    updateExpensePreview();
+  });
+});
+
+function updateDateShortcuts() {
+  const budget = getBudget();
+  const today = todayISO();
+  const yesterday = shiftISODate(today, -1);
+  document.querySelectorAll('[data-expense-date]').forEach(button => {
+    const date = button.dataset.expenseDate === 'yesterday' ? yesterday : today;
+    button.disabled = date < budget.startDate || date > budget.endDate || date > today;
+  });
+}
+
+document.querySelectorAll('[data-expense-date]').forEach(button => {
+  button.addEventListener('click', () => {
+    const date = button.dataset.expenseDate === 'yesterday'
+      ? shiftISODate(todayISO(), -1)
+      : todayISO();
+    byId('expense-date').value = date;
+    updateExpensePreview();
+  });
+});
+
 byId('amount').addEventListener('input', updateExpensePreview);
-byId('expense-date').addEventListener('input', updateExpensePreview);
+byId('expense-date').addEventListener('input', () => {
+  updateExpensePreview();
+  updateDateShortcuts();
+});
 
 byId('expense-form').addEventListener('submit', event => {
   event.preventDefault();
@@ -647,8 +850,7 @@ function renderAlert(status) {
   byId('alert-left').textContent = formatCurrency(status.left);
   byId('alert-spent').textContent =
     formatCurrency(status.spent) + ' of ' + formatCurrency(status.weeklyBudget) + ' spent';
-  byId('alert-message').textContent =
-    'You’re ' + formatCurrency(Math.abs(status.left)) + ' over this week.';
+  byId('alert-message').textContent = getBudgetGuidance(status);
   renderDayChart('alert-day-chart', range);
 }
 
@@ -687,11 +889,16 @@ function renderWeekCategories(budget, weekIndex, range) {
     row.className = 'week-category-row';
     const header = document.createElement('div');
     header.className = 'week-category-heading';
+    const categoryLabel = document.createElement('span');
+    const icon = document.createElement('span');
+    icon.className = 'category-icon week-category-icon';
+    setCategoryIcon(icon, category, budget.categories.indexOf(category));
     const name = document.createElement('span');
-    name.textContent = getCategoryIcon(category) + '  ' + category.name;
+    name.textContent = category.name;
+    categoryLabel.append(icon, name);
     const values = document.createElement('strong');
     values.textContent = formatCurrency(spent) + ' / ' + formatCurrency(category.weeklyLimit);
-    header.append(name, values);
+    header.append(categoryLabel, values);
     const meter = document.createElement('div');
     meter.className = 'category-meter';
     const fill = document.createElement('span');
@@ -716,7 +923,8 @@ function renderTransactions(expenses) {
     const icon = document.createElement('span');
     icon.className = 'category-icon';
     const category = getBudget().categories.find(entry => entry.id === expense.categoryId);
-    icon.textContent = category ? getCategoryIcon(category) : '✧';
+    if (category) setCategoryIcon(icon, category, getBudget().categories.indexOf(category));
+    else icon.textContent = '✧';
     const details = document.createElement('div');
     details.className = 'transaction-details';
     const title = document.createElement('strong');
@@ -753,10 +961,20 @@ byId('transaction-list').addEventListener('click', event => {
     return;
   }
   const remove = event.target.closest('[data-delete-expense]');
-  if (remove && window.confirm('Delete this spend?')) {
-    deleteExpense(remove.dataset.deleteExpense);
+  if (remove) {
+    const expense = getExpenses().find(item => item.id === remove.dataset.deleteExpense);
+    if (!expense) return;
+    deleteExpense(expense.id);
     renderWeek();
-    showMessage('Spend deleted.');
+    showUndoMessage('Spend deleted.', () => {
+      if (!restoreExpense(expense)) {
+        showMessage('Could not restore the deleted spend.');
+        return;
+      }
+      renderWeek();
+      renderHome();
+      showMessage('Spend restored.');
+    });
   }
 });
 
@@ -779,6 +997,7 @@ function renderInsights() {
   const month = now.getMonth() + 1;
   const expenses = getMonthlyExpenses(year, month);
   const monthlyTotal = sumExpenses(expenses);
+  byId('month-empty').hidden = monthlyTotal > 0;
   const categoryTotals = getCategoryTotals(
     String(year) + '-' + String(month).padStart(2, '0') + '-01',
     String(year) + '-' + String(month).padStart(2, '0') + '-31'
@@ -833,14 +1052,14 @@ function renderDonut(totals, categories) {
     const amount = totals[category.id] || 0;
     const percent = total ? amount / total * 100 : 0;
     if (amount > 0) {
-      segments.push(CATEGORY_COLORS[index % CATEGORY_COLORS.length] + ' ' +
+      segments.push(getCategoryColor(category, index) + ' ' +
         cursor + '% ' + (cursor + percent) + '%');
       cursor += percent;
     }
     const item = document.createElement('li');
     const dot = document.createElement('span');
     dot.className = 'legend-dot';
-    dot.style.backgroundColor = CATEGORY_COLORS[index % CATEGORY_COLORS.length];
+    dot.style.backgroundColor = getCategoryColor(category, index);
     const details = document.createElement('span');
     details.className = 'legend-details';
     const name = document.createElement('strong');
@@ -856,11 +1075,64 @@ function renderDonut(totals, categories) {
   donut.style.background = segments.length
     ? 'conic-gradient(' + segments.join(', ') + ')'
     : 'conic-gradient(#e2e8ec 0 100%)';
+  donut.setAttribute('aria-label', total
+    ? 'Monthly spending: ' + categories
+        .filter(category => totals[category.id] > 0)
+        .map(category => category.name + ' ' + formatCurrency(totals[category.id]))
+        .join(', ')
+    : 'No spending recorded this month');
 }
 
 byId('amount').addEventListener('focus', () => {
   if (byId('amount').value === '0') byId('amount').value = '';
 });
+
+function handleDataExport() {
+  const budget = getBudget();
+  if (!budget) {
+    showMessage('Build a semester plan before exporting your backup.');
+    return;
+  }
+  const payload = exportBudgetData();
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = 'pocket-budget-backup.json';
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+  showMessage('Backup downloaded.');
+}
+
+function handleDataImport(event) {
+  const file = event.target.files && event.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      const payload = JSON.parse(String(reader.result || ''));
+      importBudgetData(payload);
+      renderHome();
+      showScreen('home');
+      showMessage('Backup restored.');
+    } catch (error) {
+      showMessage(error.message || 'This backup could not be restored.');
+    } finally {
+      event.target.value = '';
+    }
+  };
+  reader.onerror = () => {
+    showMessage('Unable to read this backup file.');
+    event.target.value = '';
+  };
+  reader.readAsText(file);
+}
+
+byId('export-data').addEventListener('click', handleDataExport);
+byId('import-data-file').addEventListener('change', handleDataImport);
 
 if (getBudget()) {
   renderHome();
