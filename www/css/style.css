@@ -1,5 +1,6 @@
 :root {
   color-scheme: light;
+  /* pocket design tokens — see docs/05-style-guide.md */
   --paper: #f7f6f2;
   --white: #fff;
   --navy: #0c2e50;
@@ -11,10 +12,26 @@
   --gold: #efb231;
   --red: #bd4038;
   --red-soft: #fbedeb;
+  --green: #397c64;
+  --canvas: #e9ebed;
+  --focus: #78a9dc;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --radius-sm: 9px;
+  --radius-md: 14px;
   --radius: 20px;
-  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --radius-lg: 28px;
+  --shadow-shell: 0 0 36px rgb(15 31 48 / 12%);
+  --font-ui: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-display: Georgia, "Times New Roman", serif;
+  font-family: var(--font-ui);
   color: var(--ink);
-  background: #e9ebed;
+  background: var(--canvas);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
 }
@@ -25,13 +42,13 @@ body {
   min-width: 320px;
   min-height: 100vh;
   margin: 0;
-  background: #e9ebed;
+  background: var(--canvas);
 }
 
 button, input, select { font: inherit; }
 button { color: inherit; }
 button:focus-visible, input:focus-visible, select:focus-visible, a:focus-visible {
-  outline: 3px solid #78a9dc;
+  outline: 3px solid var(--focus);
   outline-offset: 3px;
 }
 
@@ -46,7 +63,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, a:focus-visible
   margin: 0 auto;
   overflow: hidden;
   background: var(--paper);
-  box-shadow: 0 0 36px rgb(15 31 48 / 12%);
+  box-shadow: var(--shadow-shell);
 }
 
 .app-header {
@@ -127,7 +144,7 @@ h1, h2, p { margin-top: 0; }
 
 h1, .section-title-row h2, .content-card h2, .alert-panel h2 {
   color: var(--navy);
-  font-family: Georgia, "Times New Roman", serif;
+  font-family: var(--font-display);
   font-weight: 500;
   letter-spacing: -.025em;
 }
@@ -301,7 +318,7 @@ h1 {
 .allocation-summary .field-label { margin: 0; }
 .allocation-summary > strong { color: var(--navy); font-size: 15px; }
 .allocation-message { margin: 8px 0 12px; color: var(--red); font-size: 11px; }
-.allocation-message.is-balanced { color: #397c64; }
+.allocation-message.is-balanced { color: var(--green); }
 
 .balance-card { position: relative; margin-bottom: 20px; padding: 20px; border-radius: var(--radius); background: var(--navy); color: var(--white); }
 .balance-card.is-over { background: var(--red); }
@@ -401,7 +418,7 @@ h1 {
 
 .insights-month-card { padding: 19px; }
 .insights-month-card .card-heading { align-items: baseline; }
-.insights-month-card .card-heading h2, .projection-card h2 { font-family: Georgia, "Times New Roman", serif; font-size: 22px; font-weight: 500; letter-spacing: -.02em; }
+.insights-month-card .card-heading h2, .projection-card h2 { font-family: var(--font-display); font-size: 22px; font-weight: 500; letter-spacing: -.02em; }
 .donut-layout { display: flex; align-items: center; gap: 18px; margin-top: 14px; }
 .donut-chart { position: relative; display: grid; flex: 0 0 120px; width: 120px; height: 120px; place-items: center; border-radius: 50%; }
 .donut-chart::after { position: absolute; width: 69px; height: 69px; border-radius: 50%; background: var(--white); content: ""; }

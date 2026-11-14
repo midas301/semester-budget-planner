@@ -10,6 +10,14 @@ pocket is a mobile-first budgeting companion that helps students turn semester f
 - Warns when a week reaches its budget and provides a weekly transaction review.
 - Summarizes monthly spending and estimates how long the remaining semester balance may last.
 
+## Design handoff
+
+- [Style guide](docs/05-style-guide.md)
+- [Design decisions](docs/04-design-decisions.md)
+- [Seven-screen Figma handoff and prototype routes](docs/06-figma-handoff.md)
+- [Student usability test plan and results sheet](docs/07-usability-test.md)
+- [Editable seven-screen SVG board](assets/wireframe/pocket-7-screen-board.svg)
+
 The app does not connect to a bank. Budgets and expenses are stored locally on the device/browser and are not synced to an account.
 Use **Export backup** on the Home screen before switching devices or reinstalling. The resulting JSON file can be restored with **Import backup**.
 
